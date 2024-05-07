@@ -11,3 +11,20 @@
 @import 'additional-styles/theme.css';
 
 @import 'tailwindcss/utilities';
+
+.video-container {
+    margin-top: 15px;
+    height: 300px;
+    width: 100%;
+    overflow: hidden;
+}
+video {
+    height: 400px;
+    width: 100%;
+    object-fit: cover;
+}
+/* Remove Controls to work on container */
+
+.player-controls {
+    display: none;
+}

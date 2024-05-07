@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 
 import Sidebar from '../partials/Sidebar';
 import Header from '../partials/Header';
@@ -20,10 +20,150 @@ import DashboardCard11 from '../partials/dashboard/DashboardCard11';
 import DashboardCard12 from '../partials/dashboard/DashboardCard12';
 import DashboardCard13 from '../partials/dashboard/DashboardCard13';
 import Banner from '../partials/Banner';
+import Streams from '../pages/Streams'
+import {secondsToDhmsSimple} from "../utils/Utils";
+import axios from "axios";
 
 function Dashboard() {
 
+
+  const [streamz, setStreams] = useState([]);
+  const [token, setToken] = useState([]);
+
+useEffect( ()=>{
+
+    fetchStreams()
+
+}, [])
+
+
+    const getToken = () => {
+        const token  = sessionStorage.getItem('token')
+        axios.defaults.headers.common['Authorization'] = token;
+        setToken(token);
+    }
+
+const fetchStreams = () => {
+
+
+
+    axios.defaults.headers.common['Authorization'] = `Basic ${btoa('admin'+ ':' + 'admin')}`
+
+    const x =  axios.get('http://admin:admin@159.223.199.239:8000/api/streams').then( response => {
+        let streamsData = [];
+        let index = 0;
+        let data = response.data
+        console.log(data)
+        for (let app in data) {
+            for (let name in data[app]) {
+                let stream = data[app][name].publisher;
+                let clients = data[app][name].subscribers;
+                if (stream) {
+                    let now = new Date().getTime() / 1000;
+                    let str = new Date(stream.connectCreated).getTime() / 1000;
+                    let streamData = {
+                        key: index++,
+                        app,
+                        name,
+                        id: stream.clientId,
+                        ip: stream.ip,
+                        ac: stream.audio ? stream.audio.codec + " " + stream.audio.profile : "",
+                        freq: stream.audio ? stream.audio.samplerate : "",
+                        chan: stream.audio ? stream.audio.channels : "",
+                        vc: stream.video ? stream.video.codec + " " + stream.video.profile : "",
+                        size: stream.video ? stream.video.width + "x" + stream.video.height : "",
+                        fps: stream.video ? Math.floor(stream.video.fps) : "",
+                        time: secondsToDhmsSimple(now - str),
+                        clients: clients.length
+                    };
+
+                    streamsData.push(streamData);
+                }
+            }
+        }
+        return streamsData
+    }).catch();
+
+    x.then( res => setStreams(res));
+}
+
+
+const getLiveStreams = () => {
+
+
+
+     /* const listActiveLiveStreams = [
+          {
+              id: '1',
+              stateTransmision: 'Live',
+              streamName: 'demo_844',
+              deviceId: '11061987',
+              operatorName: 'Miguel Angel Gorostizaga',
+              operatorPosition: 'Bobcat Operator',
+              groupId: 1,
+              groupName: 'Construccion Tren Maya',
+              groupLocationCity: 'Merida',
+              groupLocationProvince: 'Yucatán',
+              lastGpsPosition: {latitude: '13.342,234234', longitude: '12.123,234'},
+          },
+          {
+              id: '2',
+              stateTransmision: 'Live',
+              streamName: 'Livestream2',
+              deviceId: '11061988',
+              operatorName: 'Roberto Martinez',
+              operatorPosition: 'Conductor Uber',
+              groupId: 1,
+              groupName: 'Uber',
+              groupLocationCity: 'Benito Juarez',
+              groupLocationProvince: 'CDMX',
+              lastGpsPosition: {latitude: '13.342,234234', longitude: '12.123,234'},
+          },
+          {
+              id: '3',
+              stateTransmision: 'Offline',
+              streamName: 'Livestream3',
+              deviceId: '11061989',
+              operatorName: 'Ramon Quiroz',
+              operatorPosition: 'Conductor Uber',
+              groupId: 2,
+              groupName: 'Bodega',
+              groupLocationCity: 'Iztapalapa',
+              groupLocationProvince: 'CDMX',
+              lastGpsPosition: {latitude: '13.342,234234', longitude: '12.123,234'},
+          }
+      ]; */
+
+console.log(streamz)
+
+      if(streamz) {
+          return streamz.map( (item, id) => {
+              return <DashboardCard01 key={id} activeStreams={item} />
+          })
+      }else {
+
+          return streamz.map( (item, id) => {
+              return <DashboardCard01 key={id} activeStreams={item} />
+          })
+
+      }
+  }
+
+
+
+
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const [activeLiveStreams, setActiveLiveStreams] = useState();
+
+  const [records, setRecords] = useState(0);
+
+  function handleDataFromChild(){
+    // 👇️ take the parameter passed from the Child component
+      //setRecords(recordsVal);
+      //console.log(records)
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -52,16 +192,18 @@ function Dashboard() {
               {/* Right: Actions */}
               <div className="grid grid-flow-col sm:auto-cols-max justify-start sm:justify-end gap-2">
                 {/* Filter button */}
+
                 <FilterButton />
                 {/* Datepicker built with flatpickr */}
+
                 <Datepicker />
                 {/* Add view button */}
                 <button className="btn bg-indigo-500 hover:bg-indigo-600 text-white">
                     <svg className="w-4 h-4 fill-current opacity-50 shrink-0" viewBox="0 0 16 16">
                         <path d="M15 7H9V1c0-.6-.4-1-1-1S7 .4 7 1v6H1c-.6 0-1 .4-1 1s.4 1 1 1h6v6c0 .6.4 1 1 1s1-.4 1-1V9h6c.6 0 1-.4 1-1s-.4-1-1-1z" />
                     </svg>
-                    <span className="hidden xs:block ml-2">Add view</span>
-                </button>                
+                    <span className="hidden xs:block ml-2">Ver</span>
+                </button>
               </div>
 
             </div>
@@ -69,33 +211,24 @@ function Dashboard() {
             {/* Cards */}
             <div className="grid grid-cols-12 gap-6">
 
-              {/* Line chart (Acme Plus) */}
-              <DashboardCard01 />
-              {/* Line chart (Acme Advanced) */}
-              <DashboardCard02 />
-              {/* Line chart (Acme Professional) */}
-              <DashboardCard03 />
-              {/* Bar chart (Direct vs Indirect) */}
-              <DashboardCard04 />
-              {/* Line chart (Real Time Value) */}
-              <DashboardCard05 />
-              {/* Doughnut chart (Top Countries) */}
-              <DashboardCard06 />
+
+
+
+              {/* Line chart (LiveStreams) */}
+                { streamz && getLiveStreams() }
+              {/* Card (Customers) */}
+
+              <Streams />
+
+
+              <DashboardCard10 />
               {/* Table (Top Channels) */}
               <DashboardCard07 />
-              {/* Line chart (Sales Over Time) */}
-              <DashboardCard08 />
-              {/* Stacked bar chart (Sales VS Refunds) */}
-              <DashboardCard09 />
-              {/* Card (Customers) */}
-              <DashboardCard10 />
-              {/* Card (Reasons for Refunds) */}
-              <DashboardCard11 />
-              {/* Card (Recent Activity) */}
-              <DashboardCard12 />
-              {/* Card (Income/Expenses) */}
-              <DashboardCard13 />
-              
+              {/* Table (Servidor Data) */}
+              {/* <DashboardCard02 /> */}
+              {/* Line chart (Acme Professional) */}
+
+
             </div>
 
           </div>
@@ -109,3 +242,29 @@ function Dashboard() {
 }
 
 export default Dashboard;
+
+
+
+
+/**
+<DashboardCard03 />
+Bar chart (Direct vs Indirect)
+<DashboardCard04 />
+{/* Line chart (Real Time Value)
+<DashboardCard05 />
+{/* Doughnut chart (Top Countries)
+<DashboardCard06 />
+
+{/* Line chart (Sales Over Time)
+<DashboardCard08 />
+{/* Stacked bar chart (Sales VS Refunds)
+<DashboardCard09 />
+
+{/* Card (Reasons for Refunds)
+<DashboardCard11 />
+{/* Card (Recent Activity)
+<DashboardCard12 />
+{/* Card (Income/Expenses)
+<DashboardCard13 />
+
+*/

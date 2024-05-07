@@ -5,6 +5,7 @@ import RealtimeChart from '../../charts/RealtimeChart';
 // Import utilities
 import { tailwindConfig, hexToRGB } from '../../utils/Utils';
 
+
 function DashboardCard05() {
 
   // IMPORTANT:
@@ -93,6 +94,9 @@ function DashboardCard05() {
       {/* Chart built with Chart.js 3 */}
       {/* Change the height attribute to adjust the chart height */}
       <RealtimeChart data={chartData} width={595} height={248} />
+
+
+
     </div>
   );
 }
